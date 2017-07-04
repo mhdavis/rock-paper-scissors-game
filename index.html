@@ -108,21 +108,37 @@ var config = {
 firebase.initializeApp(config);
 
 let database = firebase.database();
+let playerNumber = 0;
 
-$(document).on('click', '#player-input-button', function () {
-  event.preventDefault();
-  database.ref("/players").push(
+function addPlayer(id) {
+  database.ref("/players/" + id).set(
     {
       name: $("#player-input").val().trim(),
       wins: 0,
       losses: 0
     }
   )
-});
+}
 
 $(document).ready(function () {
+
+$(document).on('click', '#player-input-button', function () {
+  event.preventDefault();
+  if (playerNumber !== 2) {
+    playerNumber++;
+    addPlayer(playerNumber);
+  } else {
+    alert("Already two players!");
+  }
 });
 
+if (playerNumber === 2) {
+  alert("begin");
+}
+
+});
+
+// beforeunload event to detect reloading of page
 
 </script>
 
