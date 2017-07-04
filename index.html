@@ -39,6 +39,15 @@
 <body>
   <div class="text-center">
     <h1>Rock Paper Scissors</h1>
+    <form class="">
+      <div class="form-group">
+        <label></label>
+        <span>
+        <input type="text" class="form-control" id="player-input">
+        <input id="player-input-button" type="submit">
+        </span>
+      </div>
+    </form>
   </div>
 
   <div class="container">
@@ -97,6 +106,23 @@ var config = {
   messagingSenderId: "437626440494"
 };
 firebase.initializeApp(config);
+
+let database = firebase.database();
+
+$(document).on('click', '#player-input-button', function () {
+  event.preventDefault();
+  database.ref("/players").push(
+    {
+      name: $("#player-input").val().trim(),
+      wins: 0,
+      losses: 0
+    }
+  )
+});
+
+$(document).ready(function () {
+});
+
 
 </script>
 
