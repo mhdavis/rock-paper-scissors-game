@@ -142,7 +142,8 @@
           turn = 1;
           let playerOneChoice;
           let playerTwoChoice;
-          // turn one begins
+
+          // turn one begins --------------------------------------------------
           database.ref("/turn").set(turn);
 
           promptPlayerInput('one');
@@ -159,7 +160,7 @@
           turn++;
           database.ref("/turn").set(turn);
 
-          // turn two begins
+          // turn two begins --------------------------------------------------
           promptPlayerInput('two');
           $("#player-two-box").css("border-color", "yellow");
 
@@ -175,7 +176,7 @@
           turn++;
           database.ref("/turn").set(turn);
 
-          // turn three begins
+          // turn three begins ------------------------------------------------
           $(document).off('click', '.two-rps-button');
           var answer = comparePlayerInputs(playerOneChoice, playerTwoChoice);
           if (answer === 'one') {
@@ -183,6 +184,7 @@
             playerTwoLosses++;
             database.ref("/players/1/wins").update(playerOneWins);
             database.ref("/players/2/losses").update(playerTwoLosses);
+
           } else if (answer === 'two') {
             playerOneLosses++;
             playerTwoWins++;
@@ -241,13 +243,12 @@
   function promptPlayerInput(num) {
     var buttonGroup =
       `
-  <div class="button-group">
-    <button class="rock-button ${num}-rps-button btn btn-mg btn-default">Rock</button>
-    <button class="paper-button ${num}-rps-button btn btn-mg btn-default">Paper</button>
-    <button class="scissors-button ${num}-rps-button btn btn-mg btn-default">Scissors</button>
-  </div>
-  `
-    console.log("I'm in prompPlayerInput function!");
+    <div class="button-group">
+      <button class="rock-button ${num}-rps-button btn btn-mg btn-default">Rock</button>
+      <button class="paper-button ${num}-rps-button btn btn-mg btn-default">Paper</button>
+      <button class="scissors-button ${num}-rps-button btn btn-mg btn-default">Scissors</button>
+    </div>
+    `;
     $('#player-' + num + '-box').append(buttonGroup);
     return;
   }
