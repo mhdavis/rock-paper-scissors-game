@@ -30,8 +30,7 @@
 
   .col-center {
     float: none;
-    margin-right: auto;
-    margin-left: auto;
+    margin: 0 auto;
   }
 </style>
 
@@ -114,78 +113,67 @@
   let playerTwoWins = 0;
   let playerTwoLosses = 0;
 
-  function addPlayer(id) {
-    database.ref("/players/" + id).set({
-      name: $("#player-input").val().trim(),
-      wins: 0,
-      losses: 0
-    })
-  }
+  let p1choice;
+  let p2choice;
+
+  let playerOneRef = database.ref("/players/1");
+  let playerTwoRef = database.ref("/players/2");
+  let turnRef = database.ref("/turn");
 
   $(document).ready(function() {
 
     $(document).on('click', '#player-input-button', function() {
       event.preventDefault();
-      if (playerNumber !== 2) {
-        playerNumber++;
-        console.log("Player added: " + playerNumber);
-        addPlayer(playerNumber);
-        $('#player-input').val('');
+      if () {
+        addPlayer(1);
       } else {
-        alert("Already two players!");
+        addPlayer(2);
+        turnRef.set(1);
       }
+
     });
 
-    database.ref("/players").on("child_added", function() {
-        if (playerNumber === 2) {
+    turnRef.on('value', function (snapshot) {
+      if (snapshot.val().turn === 1) {
+        // set player one border to yellow
+        $("#player-one-box").css("border-color", "yellow");
+        // give player one options (r,p,s)
+        promptPlayerInput('one');
+        // get value player one clicked on and display it for player one
+        $(document).on('click', ".one-rps-button", function () {
+          p1choice = $(this).val();
+          database.ref("/player/1/choice").set(p1choice);
+          $("player-one-box")
+          .css("border-color", "black")
+          .html(`<h3>${p1choice}</h3>`);
+        });
+        // set playerOneRef.choice to choice value
+        turnRef.set(2);
 
-          turn = 1;
-          let playerOneChoice;
-          let playerTwoChoice;
+      } else if (snapshot.val().turn === 2) {
+        // set player one border to yellow
+        $("#player-two-box").css("border-color", "yellow");
+        // give player one options (r,p,s)
+        promptPlayerInput('two');
+        // get value player one clicked on and display it for player one
+        $(document).on('click', ".two-rps-button", function () {
+          p2choice = $(this).val();
+          database.ref("/player/2/choice").set(p2choice);
+          $("player-two-box")
+          .css("border-color", "black")
+          .html(`<h3>${p2choice}</h3>`);
+        });
+        // set playerOneRef.choice to choice value
+        turnRef.set(3);
 
-          // turn one begins --------------------------------------------------
-          database.ref("/turn").set(turn);
-
-          promptPlayerInput('one');
-          $("#player-one-box").css("border-color", "yellow");
-
-          $(document).on('click', '.one-rps-button', function() {
-            var choice = $(this).val();
-            database.ref("/players/1/choice").set(choice);
-            playerOneChoice = choice;
-            $("#player-one-box")
-              .css("border-color", "black")
-              .html(`<h3>${choice}</h3>`);
-          });
-          turn++;
-          database.ref("/turn").set(turn);
-
-          // turn two begins --------------------------------------------------
-          promptPlayerInput('two');
-          $("#player-two-box").css("border-color", "yellow");
-
-          $(document).on('click', '.two-rps-button', function() {
-            $(document).off('click', '.one-rps-button');
-            var choice = $(this).val();
-            playerTwoChoice = choice;
-            database.ref("/players/2/choice").set(choice);
-            $("#player-two-box")
-              .css("border-color", "black")
-              .html(`<h3>${choice}</h3>`);
-          });
-          turn++;
-          database.ref("/turn").set(turn);
-
-          // turn three begins ------------------------------------------------
-          $(document).off('click', '.two-rps-button');
-          var answer = comparePlayerInputs(playerOneChoice, playerTwoChoice);
-          if (answer === 'one') {
+      } else if (snapshot.val().turn === 3) {
+          let output = comparePlayerInputs(p1choice, p2choice);
+          if (output === 'one') {
             playerOneWins++;
             playerTwoLosses++;
             database.ref("/players/1/wins").update(playerOneWins);
             database.ref("/players/2/losses").update(playerTwoLosses);
-
-          } else if (answer === 'two') {
+          } else if (output === 'two') {
             playerOneLosses++;
             playerTwoWins++;
             database.ref("/players/1/losses").update(playerOneLosses);
@@ -193,12 +181,20 @@
           }
           database.ref("/players/1/choice").remove();
           database.ref("/players/2/choice").remove();
-          turn = 0;
-          database.ref("/turn").set(turn);
-        }
-
+          $(document).off('.one-rps-button');
+          $(document).off('.two-rps-button');
+          turnRef.set(0);
       }
+
     });
+
+  function addPlayer(id) {
+    database.ref("/players/" + id).set({
+      name: $("#player-input").val().trim(),
+      wins: 0,
+      losses: 0
+    })
+  }
 
   function comparePlayerInputs(a, b) {
 
