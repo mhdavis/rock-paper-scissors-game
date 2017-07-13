@@ -16,6 +16,10 @@
     margin: 2em 0 0;
   }
 
+  .current-player {
+    border: 1px solid orange;
+  }
+
   .box {
     border: 1px solid black;
     height: 200px;
@@ -39,7 +43,7 @@
     <h1>Rock Paper Scissors</h1>
 
     <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6 col-center">
-      <form class="">
+      <form class="player-entry-form">
         <div class="form-group">
           <label>Enter Player Name:</label>
           <input type="text" class="form-control" id="player-input">
@@ -94,164 +98,6 @@
 <!--Firebase-->
 <script src="https://www.gstatic.com/firebasejs/4.1.3/firebase.js"></script>
 <!-- Js -->
-<script type="text/javascript">
-  var config = {
-    apiKey: "AIzaSyCHJWoeCMbyK6mmhQlxCPIQwPzCZXSa_bU",
-    authDomain: "rock-paper-scissors-game-b4885.firebaseapp.com",
-    databaseURL: "https://rock-paper-scissors-game-b4885.firebaseio.com",
-    projectId: "rock-paper-scissors-game-b4885",
-    storageBucket: "",
-    messagingSenderId: "977002967515"
-  };
-  firebase.initializeApp(config);
-
-  let database = firebase.database();
-  let playerNumber = 0;
-  let turn = 0;
-  let playerOneWins = 0;
-  let playerOneLosses = 0;
-  let playerTwoWins = 0;
-  let playerTwoLosses = 0;
-
-  let p1choice;
-  let p2choice;
-
-  let playerOneRef = database.ref("/players/1");
-  let playerTwoRef = database.ref("/players/2");
-  let turnRef = database.ref("/turn");
-
-  $(document).ready(function() {
-
-    $(document).on('click', '#player-input-button', function() {
-      event.preventDefault();
-      if () {
-        addPlayer(1);
-      } else {
-        addPlayer(2);
-        turnRef.set(1);
-      }
-
-    });
-
-    turnRef.on('value', function (snapshot) {
-      if (snapshot.val().turn === 1) {
-        // set player one border to yellow
-        $("#player-one-box").css("border-color", "yellow");
-        // give player one options (r,p,s)
-        promptPlayerInput('one');
-        // get value player one clicked on and display it for player one
-        $(document).on('click', ".one-rps-button", function () {
-          p1choice = $(this).val();
-          database.ref("/player/1/choice").set(p1choice);
-          $("player-one-box")
-          .css("border-color", "black")
-          .html(`<h3>${p1choice}</h3>`);
-        });
-        // set playerOneRef.choice to choice value
-        turnRef.set(2);
-
-      } else if (snapshot.val().turn === 2) {
-        // set player one border to yellow
-        $("#player-two-box").css("border-color", "yellow");
-        // give player one options (r,p,s)
-        promptPlayerInput('two');
-        // get value player one clicked on and display it for player one
-        $(document).on('click', ".two-rps-button", function () {
-          p2choice = $(this).val();
-          database.ref("/player/2/choice").set(p2choice);
-          $("player-two-box")
-          .css("border-color", "black")
-          .html(`<h3>${p2choice}</h3>`);
-        });
-        // set playerOneRef.choice to choice value
-        turnRef.set(3);
-
-      } else if (snapshot.val().turn === 3) {
-          let output = comparePlayerInputs(p1choice, p2choice);
-          if (output === 'one') {
-            playerOneWins++;
-            playerTwoLosses++;
-            database.ref("/players/1/wins").update(playerOneWins);
-            database.ref("/players/2/losses").update(playerTwoLosses);
-          } else if (output === 'two') {
-            playerOneLosses++;
-            playerTwoWins++;
-            database.ref("/players/1/losses").update(playerOneLosses);
-            database.ref("/players/2/wins").update(playerTwoWins);
-          }
-          database.ref("/players/1/choice").remove();
-          database.ref("/players/2/choice").remove();
-          $(document).off('.one-rps-button');
-          $(document).off('.two-rps-button');
-          turnRef.set(0);
-      }
-
-    });
-
-  function addPlayer(id) {
-    database.ref("/players/" + id).set({
-      name: $("#player-input").val().trim(),
-      wins: 0,
-      losses: 0
-    })
-  }
-
-  function comparePlayerInputs(a, b) {
-
-    switch (a === "Rock") {
-      case (b === "Rock"):
-        return 'tie';
-        break;
-      case (b === "Scissors"):
-        return 'one';
-        break;
-      case (b === "Paper"):
-        return 'two';
-        break;
-    }
-
-    switch (a === "Paper") {
-      case (b === "Rock"):
-        return 'one';
-        break;
-      case (b === "Scissors"):
-        return 'two';
-        break;
-      case (b === "Paper"):
-        return 'tie';
-        break;
-    }
-
-    switch (a === "Scissors") {
-      case (b === "Rock"):
-        return 'two';
-        break;
-      case (b === "Scissors"):
-        return 'tie';
-        break;
-      case (b === "Paper"):
-        return 'one';
-        break;
-    }
-
-  };
-
-  function promptPlayerInput(num) {
-    var buttonGroup =
-      `
-    <div class="button-group">
-      <button class="rock-button ${num}-rps-button btn btn-mg btn-default">Rock</button>
-      <button class="paper-button ${num}-rps-button btn btn-mg btn-default">Paper</button>
-      <button class="scissors-button ${num}-rps-button btn btn-mg btn-default">Scissors</button>
-    </div>
-    `;
-    $('#player-' + num + '-box').append(buttonGroup);
-    return;
-  }
-
-  });
-
-  // beforeunload event to detect reloading of page
-</script>
+<script src="script.js" type="text/javascript"></script>
 
 </html>
