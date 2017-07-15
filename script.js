@@ -27,14 +27,12 @@ $(document).ready(function() {
     e.preventDefault();
     if (!playerOneCreated) {
       playerOne = createPlayer(1);
-      setPlayer(playerOne);
-
+      setPlayer(1, playerOne);
       isPlayerOne = true;
 
     } else if (!playerTwoCreated) {
       playerTwo = createPlayer(2);
-      setPlayer(playerTwo);
-
+      setPlayer(2, playerTwo);
       isPlayerOne = false;
 
     } else {
@@ -43,6 +41,14 @@ $(document).ready(function() {
     $('#player-input').val('');
   });
 
+  // $(document).on("unload", function () {
+  //   if (isPlayerOne === false) {
+  //     removePlayer(2, playerTwo, playerTwoCreated);
+  //   } else {
+  //     removePlayer(1, playerOne, playerOneCreated);
+  //   }
+  // });
+
 // FB handler initiates game when two players have joined
   database.ref('/players').on('child_added', function (playersSnap) {
     playersSnap.val().player === 1 ? playerOneCreated = true : playerTwoCreated = true;
@@ -50,6 +56,14 @@ $(document).ready(function() {
       database.ref('/turn').set(1);
     }
   });
+
+  database.ref('/players').on('child_removed', function (playersSnap) {
+    playersSnap.val().player === 1 ? playerOneCreated = false : playerTwoCreated = false;
+    if (playerOneCreated || playerTwoCreated) {
+      database.ref('/turn').remove();
+    }
+  })
+
 
 // FB handler that determines which turn it is in the game
   database.ref("/turn").on('value', function (turnSnap) {
@@ -79,31 +93,18 @@ $(document).ready(function() {
           p2choice = choiceSnap.val();
         });;
 
-        $(".rps-button").off();
 
         let gameResult = comparePlayerInputs(p1choice, p2choice);
 
-        if (!gameResult === "tie") {
+        if (!(gameResult === "tie")) {
           winningCondition(gameResult, playerOne, playerTwo);
         }
 
+        $(".rps-button").off();
         database.ref("/players/1/choice").remove();
         database.ref("/players/2/choice").remove();
         database.ref("/turn").set(1);
     }
-
-    // If player leaves the game
-    // database.ref("/players/1").onDisconnect(function () {
-    //   database.ref("/players/1").remove();
-    //   playerOne = false;
-    // });
-    //
-    // database.ref("/players/2").onDisconnect().remove(function () {
-    //
-    // });
-    //   playerTwo = false;
-    // });
-
 
   });
 
@@ -131,19 +132,24 @@ function rpsButtonEventHandler(num) {
 
 function winningCondition(num, p1Obj, p2Obj) {
 
-  let $winnerTag = $('<h3>')
-  .addClass('show-result')
-  .text('Player' + num + 'Wins');
+  let $winnerTag;
 
-  $("player-results-box").append($winnerTag);
+  if (num === 1) {
+    $winnerTag = `<h3 id="winner-tag">${p1Obj.name} Wins!</h3>`;
+  } else if (num === 2) {
+    $winnerTag = `<h3 id="winner-tag">${p2Obj.name} Wins!</h3>`;
+  }
+
+  $("#player-results-box").html($winnerTag);
   setTimeout(function () {
-    $("player-results-box").remove($winnerTag);
-  }, 6000);
+    $("#winner-tag").remove();
+  }, 2000);
 
   if (num === 1) {
 
     p1Obj.wins++;
     p2Obj.losses++;
+
     database.ref("/players/1/wins").set(p1Obj.wins);
     database.ref("/players/2/losses").set(p2Obj.losses);
 
@@ -154,6 +160,7 @@ function winningCondition(num, p1Obj, p2Obj) {
 
     p1Obj.losses++;
     p2Obj.wins++;
+
     database.ref("/players/1/losses").set(p1Obj.losses);
     database.ref("/players/2/wins").set(p2Obj.wins);
 
@@ -172,9 +179,9 @@ function createPlayer(num) {
       wins: 0,
       losses: 0
     };
-  $("#player-" + num + "-name").text(obj.name);
-  $("#player-" + num + "-wins").text(obj.wins);
-  $("#player-" + num + "-losses").text(obj.losses);
+  $("#player-" + num + "-name").text(playerObj.name);
+  $("#player-" + num + "-wins").text(playerObj.wins);
+  $("#player-" + num + "-losses").text(playerObj.losses);
 
   return playerObj;
 }
