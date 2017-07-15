@@ -10,126 +10,81 @@ firebase.initializeApp(config);
 
 let database = firebase.database();
 
-let playerOneWins = 0;
-let playerOneLosses = 0;
-let playerTwoWins = 0;
-let playerTwoLosses = 0;
+/*------------------------------VARIABLEs-------------------------------------*/
+let playerOne;
+let playerTwo;
 
-let p1choice;
-let p2choice;
+let playerOneCreated = false;
+let playerTwoCreated = false;
 
-let playerOne = false;
-let playerTwo = false;
+let isPlayerOne;
+
+/*--------------------------DOCUMENT READY------------------------------------*/
 
 $(document).ready(function() {
 
   $(document).on('submit', '.player-entry-form', function(e) {
     e.preventDefault();
-    if (!playerOne) {
-      database.ref("/players/1").set({
-        name: $("#player-input").val().trim(),
-        player: 1,
-        wins: 0,
-        losses: 0
-      });
-    } else if (!playerTwo) {
-      database.ref("/players/2").set({
-        name: $("#player-input").val().trim(),
-        player: 2,
-        wins: 0,
-        losses: 0
-      });
+    if (!playerOneCreated) {
+      playerOne = createPlayer(1);
+      setPlayer(playerOne);
+
+      isPlayerOne = true;
+
+    } else if (!playerTwoCreated) {
+      playerTwo = createPlayer(2);
+      setPlayer(playerTwo);
+
+      isPlayerOne = false;
+
     } else {
       alert("already two players");
     }
     $('#player-input').val('');
   });
 
-  database.ref('/players').on('child_added', function (snapshot) {
-    snapshot.val().player === 1 ? playerOne = true : playerTwo = true;
-    if (playerOne && playerTwo) {
+// FB handler initiates game when two players have joined
+  database.ref('/players').on('child_added', function (playersSnap) {
+    playersSnap.val().player === 1 ? playerOneCreated = true : playerTwoCreated = true;
+    if (playerOneCreated && playerTwoCreated) {
       database.ref('/turn').set(1);
     }
   });
 
-  // database.ref("/players/1").onDisconnect(function () {
-  //   database.ref("/players/1").remove();
-  //   playerOne = false;
-  // });
-  //
-  // database.ref("/players/2").onDisconnect().remove(function () {
-  //
-  // });
-  //   playerTwo = false;
-  // });
-
+// FB handler that determines which turn it is in the game
   database.ref("/turn").on('value', function (turnSnap) {
     if (turnSnap.val() === 1) {
-      $("#player-one-box").addClass("current-player");
 
+      $("#player-1-box").addClass("current-player");
       promptPlayerInput();
-
-      $(".rps-button").on("click", function () {
-        p1choice = $(this).text();
-        database.ref("/players/1/choice").set(p1choice);
-        $("#player-one-box")
-        .removeClass("current-player")
-        .html(`<h3>${p1choice}</h3>`);
-        database.ref("/turn").set(2);
-      });
-
+      rpsButtonEventHandler(1);
 
     } else if (turnSnap.val() === 2) {
-      $("#player-two-box").addClass("current-player");
 
+      $("#player-2-box").addClass("current-player");
       promptPlayerInput();
+      rpsButtonEventHandler(2);
 
-      $(".rps-button").on("click", function () {
-        console.log("button worked");
-        p2choice = $(this).text();
-        database.ref("/players/2/choice").set(p2choice);
-        $("#player-two-box")
-        .removeClass("current-player")
-        .html(`<h3>${p2choice}</h3>`);
-        database.ref("/turn").set(3);
-      });
 
     } else if (turnSnap.val() === 3) {
-        console.log("P1 Choice: " + p1choice);
-        console.log("P2 Choice: " + p2choice);
-        let p1choiceVal = database.ref("/players/1/choice").on('value', function (choiceSnap) {
-          return choiceSnap.val();
+
+        let p1choice;
+        let p2choice;
+
+        database.ref("/players/1/choice").on('value', function (choiceSnap) {
+          p1choice = choiceSnap.val();
         });
-        let p2choiceVal = database.ref("/players/2/choice").on('value', function (choiceSnap) {
-          return choiceSnap.val();
+
+        database.ref("/players/2/choice").on('value', function (choiceSnap) {
+          p2choice = choiceSnap.val();
         });;
-        console.log("P1 db choice:" + p1choiceVal);
-        console.log("P2 db choice:" + p2choiceVal);
+
         $(".rps-button").off();
-        let output = comparePlayerInputs(p1choice, p2choice);
-        let $resultsBox = $("player-results-box");
 
-        if (output === 'one') {
-          let $showResultElem = '<h3 class="show-result">Player One Wins</h3>';
-          $resultsBox.html($showResultElem);
-          setTimeout(function () {
-            $resultsBox.remove($showResultElem);
-          }, 6000);
-          playerOneWins++;
-          playerTwoLosses++;
-          database.ref("/players/1/wins").set(playerOneWins);
-          database.ref("/players/2/losses").set(playerTwoLosses);
+        let gameResult = comparePlayerInputs(p1choice, p2choice);
 
-        } else if (output === 'two') {
-          let $showResultElem = '<h3 class="show-result">Player Two Wins</h3>';
-          $resultsBox.html($showResultElem);
-          setTimeout(function () {
-            $resultsBox.remove($showResultElem);
-          }, 6000);
-          playerOneLosses++;
-          playerTwoWins++;
-          database.ref("/players/1/losses").set(playerOneLosses);
-          database.ref("/players/2/wins").set(playerTwoWins);
+        if (!gameResult === "tie") {
+          winningCondition(gameResult, playerOne, playerTwo);
         }
 
         database.ref("/players/1/choice").remove();
@@ -137,7 +92,105 @@ $(document).ready(function() {
         database.ref("/turn").set(1);
     }
 
+    // If player leaves the game
+    // database.ref("/players/1").onDisconnect(function () {
+    //   database.ref("/players/1").remove();
+    //   playerOne = false;
+    // });
+    //
+    // database.ref("/players/2").onDisconnect().remove(function () {
+    //
+    // });
+    //   playerTwo = false;
+    // });
+
+
   });
+
+});
+
+/*-----------------------------FUNCTIONS-------------------------------------*/
+
+function rpsButtonEventHandler(num) {
+  let playerChoice;
+
+  $(".rps-button").on("click", function (event) {
+    playerChoice = $(event.target).text();
+    database.ref("/players/" + num + "/choice").set(playerChoice);
+    $("#player-" + num + "-box")
+    .removeClass("current-player")
+    .html(`<h3>${playerChoice}</h3>`);
+
+    if (num === 1) {
+      database.ref("/turn").set(2);
+    } else if (num === 2) {
+      database.ref("/turn").set(3);
+    }
+  });
+}
+
+function winningCondition(num, p1Obj, p2Obj) {
+
+  let $winnerTag = $('<h3>')
+  .addClass('show-result')
+  .text('Player' + num + 'Wins');
+
+  $("player-results-box").append($winnerTag);
+  setTimeout(function () {
+    $("player-results-box").remove($winnerTag);
+  }, 6000);
+
+  if (num === 1) {
+
+    p1Obj.wins++;
+    p2Obj.losses++;
+    database.ref("/players/1/wins").set(p1Obj.wins);
+    database.ref("/players/2/losses").set(p2Obj.losses);
+
+    $("#player-1-wins").text(p1Obj.wins);
+    $("#player-2-losses").text(p2Obj.losses);
+
+  } else if (num === 2) {
+
+    p1Obj.losses++;
+    p2Obj.wins++;
+    database.ref("/players/1/losses").set(p1Obj.losses);
+    database.ref("/players/2/wins").set(p2Obj.wins);
+
+    $("#player-1-losses").text(p1Obj.losses);
+    $("#player-2-wins").text(p2Obj.wins);
+
+  }
+}
+
+// returns playerObj
+function createPlayer(num) {
+  let nameInput = $("#player-input").val().trim();
+  let playerObj = {
+      name: nameInput,
+      player: num,
+      wins: 0,
+      losses: 0
+    };
+  $("#player-" + num + "-name").text(obj.name);
+  $("#player-" + num + "-wins").text(obj.wins);
+  $("#player-" + num + "-losses").text(obj.losses);
+
+  return playerObj;
+}
+
+// appends playerObj to FB
+function setPlayer(num, playerObj) {
+  database.ref("/players/" + num).set(playerObj);
+  return;
+}
+
+function removePlayer(num, playerObj, created) {
+  playerObj = '';
+  database.ref("/players/" + num).remove();
+  created = false;
+  return;
+}
 
 function comparePlayerInputs(a, b) {
 
@@ -146,19 +199,19 @@ function comparePlayerInputs(a, b) {
       return 'tie';
       break;
     case (b === "Scissors"):
-      return 'one';
+      return 1;
       break;
     case (b === "Paper"):
-      return 'two';
+      return 2;
       break;
   }
 
   switch (a === "Paper") {
     case (b === "Rock"):
-      return 'one';
+      return 1;
       break;
     case (b === "Scissors"):
-      return 'two';
+      return 2;
       break;
     case (b === "Paper"):
       return 'tie';
@@ -167,13 +220,13 @@ function comparePlayerInputs(a, b) {
 
   switch (a === "Scissors") {
     case (b === "Rock"):
-      return 'two';
+      return 2;
       break;
     case (b === "Scissors"):
       return 'tie';
       break;
     case (b === "Paper"):
-      return 'one';
+      return 1;
       break;
   }
 
@@ -191,7 +244,3 @@ function promptPlayerInput() {
   $("div.current-player").html(buttonGroup);
   return;
 }
-
-});
-
-// beforeunload event to detect reloading of page
