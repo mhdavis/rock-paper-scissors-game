@@ -1,3 +1,6 @@
+// Score not updating
+// Displaying proper stuff for each player on the DOM
+
 var config = {
   apiKey: "AIzaSyCHJWoeCMbyK6mmhQlxCPIQwPzCZXSa_bU",
   authDomain: "rock-paper-scissors-game-b4885.firebaseapp.com",
@@ -27,31 +30,39 @@ $(document).ready(function() {
     e.preventDefault();
     if (!playerOneCreated) {
       playerOne = createPlayer(1);
-      setPlayer(1, playerOne);
+      setPlayer(playerOne);
       isPlayerOne = true;
 
     } else if (!playerTwoCreated) {
       playerTwo = createPlayer(2);
-      setPlayer(2, playerTwo);
+      setPlayer(playerTwo);
       isPlayerOne = false;
 
     } else {
       alert("already two players");
     }
     $('#player-input').val('');
+
   });
 
-  // $(document).on("unload", function () {
-  //   if (isPlayerOne === false) {
-  //     removePlayer(2, playerTwo, playerTwoCreated);
-  //   } else {
-  //     removePlayer(1, playerOne, playerOneCreated);
-  //   }
-  // });
+  window.onunload =  function () {
+    if (isPlayerOne === false) {
+      playerOneCreated = removePlayer(playerTwo);
+      playerOne = {};
+    } else if (isPlayerOne === true) {
+      playerTwoCreated = removePlayer(playerOne);
+      playerTwo = {};
+    } else {
+      console.log("No Players in Game");
+    }
+  }
 
 // FB handler initiates game when two players have joined
   database.ref('/players').on('child_added', function (playersSnap) {
     playersSnap.val().player === 1 ? playerOneCreated = true : playerTwoCreated = true;
+
+    displayPlayerInfo(playersSnap.val());
+
     if (playerOneCreated && playerTwoCreated) {
       database.ref('/turn').set(1);
     }
@@ -62,48 +73,56 @@ $(document).ready(function() {
     if (playerOneCreated || playerTwoCreated) {
       database.ref('/turn').remove();
     }
-  })
-
+  });
 
 // FB handler that determines which turn it is in the game
   database.ref("/turn").on('value', function (turnSnap) {
     if (turnSnap.val() === 1) {
 
-      $("#player-1-box").addClass("current-player");
-      promptPlayerInput();
-      rpsButtonEventHandler(1);
+      if (!isPlayerOne) {
+        //player one is picker
+      }
+
+      promptPlayerInput(1);
+      rpsButtonEventHandler(playerOne);
 
     } else if (turnSnap.val() === 2) {
 
-      $("#player-2-box").addClass("current-player");
-      promptPlayerInput();
-      rpsButtonEventHandler(2);
+      if (isPlayerOne) {
 
+      }
+
+      $("#player-1-box").remove(".current-player-options");
+
+      promptPlayerInput(2);
+      rpsButtonEventHandler(playerTwo);
 
     } else if (turnSnap.val() === 3) {
 
-        let p1choice;
-        let p2choice;
+      $("#player-2-box").remove(".current-player-options");
 
-        database.ref("/players/1/choice").on('value', function (choiceSnap) {
-          p1choice = choiceSnap.val();
-        });
+      let p1choice;
+      let p2choice;
 
-        database.ref("/players/2/choice").on('value', function (choiceSnap) {
-          p2choice = choiceSnap.val();
-        });;
+      database.ref("/players/1/choice").on('value', function (choiceSnap) {
+        p1choice = choiceSnap.val();
+      });
+
+      database.ref("/players/2/choice").on('value', function (choiceSnap) {
+        p2choice = choiceSnap.val();
+      });;
 
 
-        let gameResult = comparePlayerInputs(p1choice, p2choice);
+      let gameResult = comparePlayerInputs(p1choice, p2choice);
 
-        if (!(gameResult === "tie")) {
-          winningCondition(gameResult, playerOne, playerTwo);
-        }
+      if (!(gameResult === "tie")) {
+        winningCondition(gameResult, playerOne, playerTwo);
+      }
 
-        $(".rps-button").off();
-        database.ref("/players/1/choice").remove();
-        database.ref("/players/2/choice").remove();
-        database.ref("/turn").set(1);
+      $(".rps-button").off();
+      database.ref("/players/1/choice").remove();
+      database.ref("/players/2/choice").remove();
+      database.ref("/turn").set(1);
     }
 
   });
@@ -111,74 +130,15 @@ $(document).ready(function() {
 });
 
 /*-----------------------------FUNCTIONS-------------------------------------*/
-
-function rpsButtonEventHandler(num) {
-  let playerChoice;
-
-  $(".rps-button").on("click", function (event) {
-    playerChoice = $(event.target).text();
-    database.ref("/players/" + num + "/choice").set(playerChoice);
-    $("#player-" + num + "-box")
-    .removeClass("current-player")
-    .html(`<h3>${playerChoice}</h3>`);
-
-    if (num === 1) {
-      database.ref("/turn").set(2);
-    } else if (num === 2) {
-      database.ref("/turn").set(3);
-    }
-  });
-}
-
-function winningCondition(num, p1Obj, p2Obj) {
-
-  let $winnerTag;
-
-  if (num === 1) {
-    $winnerTag = `<h3 id="winner-tag">${p1Obj.name} Wins!</h3>`;
-  } else if (num === 2) {
-    $winnerTag = `<h3 id="winner-tag">${p2Obj.name} Wins!</h3>`;
-  }
-
-  $("#player-results-box").html($winnerTag);
-  setTimeout(function () {
-    $("#winner-tag").remove();
-  }, 2000);
-
-  if (num === 1) {
-
-    p1Obj.wins++;
-    p2Obj.losses++;
-
-    database.ref("/players/1/wins").set(p1Obj.wins);
-    database.ref("/players/2/losses").set(p2Obj.losses);
-
-    $("#player-1-wins").text(p1Obj.wins);
-    $("#player-2-losses").text(p2Obj.losses);
-
-  } else if (num === 2) {
-
-    p1Obj.losses++;
-    p2Obj.wins++;
-
-    database.ref("/players/1/losses").set(p1Obj.losses);
-    database.ref("/players/2/wins").set(p2Obj.wins);
-
-    $("#player-1-losses").text(p1Obj.losses);
-    $("#player-2-wins").text(p2Obj.wins);
-
-  }
-}
-
 // returns playerObj
 function createPlayer(num) {
   let nameInput = $("#player-input").val().trim();
   let playerObj = {
-      name: nameInput,
-      player: num,
-      wins: 0,
-      losses: 0
-    };
+    name: nameInput,
+    player: num,
+    wins: 0,
+    losses: 0
+  };
   $("#player-" + num + "-name").text(playerObj.name);
   $("#player-" + num + "-wins").text(playerObj.wins);
   $("#player-" + num + "-losses").text(playerObj.losses);
@@ -187,17 +147,78 @@ function createPlayer(num) {
 }
 
 // appends playerObj to FB
-function setPlayer(num, playerObj) {
-  database.ref("/players/" + num).set(playerObj);
+function setPlayer(playerObj) {
+  database.ref("/players/" + playerObj.player).set(playerObj);
   return;
 }
 
-function removePlayer(num, playerObj, created) {
-  playerObj = '';
-  database.ref("/players/" + num).remove();
-  created = false;
-  return;
+function displayPlayerInfo(playerObj) {
+  $("#player-" + playerObj.player + "-name").text(playerObj.name);
+  $("#player-" + playerObj.player + "-wins").text(playerObj.wins);
+  $("#player-" + playerObj.player + "-losses").text(playerObj.losses);
 }
+
+function removePlayer(playerObj) {
+  if (playerObj === undefined) {
+    return;
+  } else {
+    database.ref("/players/" + playerObj.player).remove();
+    return false;
+  }
+}
+
+function rpsButtonEventHandler(playerObj) {
+  let playerChoice;
+
+  $(".rps-button").on("click", function (event) {
+    playerChoice = $(event.target).text();
+    database.ref("/players/" + playerObj.player + "/choice").set(playerChoice);
+    $("#player-" + playerObj.player + "-box")
+    .removeClass("current-player")
+    .html(`<h3>${playerChoice}</h3>`);
+
+    if (playerObj.player === 1) {
+      database.ref("/turn").set(2);
+    } else if (playerObj.player === 2) {
+      database.ref("/turn").set(3);
+    }
+  });
+}
+
+function winningCondition(winner, p1Obj, p2Obj) {
+
+  let $winnerTag;
+
+  if (winner === p1Obj.player) {
+    $winnerTag = `<h3 id="winner-tag">${p1Obj.name} Wins!</h3>`;
+
+    p1Obj.wins++;
+    p2Obj.losses++;
+
+    database.ref("/players/1/wins").set(p1Obj.wins);
+    database.ref("/players/2/losses").set(p2Obj.losses);
+
+  } else if (winner === p2Obj.player) {
+    $winnerTag = `<h3 id="winner-tag">${p2Obj.name} Wins!</h3>`;
+
+    p1Obj.losses++;
+    p2Obj.wins++;
+
+    database.ref("/players/1/losses").set(p1Obj.losses);
+    database.ref("/players/2/wins").set(p2Obj.wins);
+  }
+
+  $("#player-1-wins").text(p1Obj.wins);
+  $("#player-1-losses").text(p1Obj.losses);
+  $("#player-2-wins").text(p2Obj.wins);
+  $("#player-2-losses").text(p2Obj.losses);
+
+  $("#player-results-box").html($winnerTag);
+  setTimeout(function () {
+    $("#winner-tag").remove();
+  }, 2000);
+}
+
 
 function comparePlayerInputs(a, b) {
 
@@ -239,15 +260,17 @@ function comparePlayerInputs(a, b) {
 
 };
 
-function promptPlayerInput() {
+function promptPlayerInput(num) {
   var buttonGroup =
-    `
-  <div class="button-group">
-    <button class="rps-button btn btn-md btn-default">Rock</button>
-    <button class="rps-button btn btn-md btn-default">Paper</button>
-    <button class="rps-button btn btn-md btn-default">Scissors</button>
+  `
+  <div class="current-player-options">
+    <div class="button-group">
+      <button class="rps-button btn btn-md btn-default">Rock</button>
+      <button class="rps-button btn btn-md btn-default">Paper</button>
+      <button class="rps-button btn btn-md btn-default">Scissors</button>
+    </div>
   </div>
   `;
-  $("div.current-player").html(buttonGroup);
+  $("player-" + num + "-box").html(buttonGroup);
   return;
 }
