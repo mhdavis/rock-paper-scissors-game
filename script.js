@@ -167,7 +167,7 @@ function pullPlayer(playerObj) {
 function displayPlayerInfo(playerObj) {
   let playerStats =
   `
-  <p>Wins: <span id="player-${playerObj.player}-wins">${playerObj.wins}</span>
+  <p class="text-center">Wins: <span id="player-${playerObj.player}-wins">${playerObj.wins}</span>
   Losses: <span id="player-${playerObj.player}-losses">${playerObj.losses}</span></p>
   `;
 

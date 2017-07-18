@@ -8,69 +8,41 @@
   <!-- Bootstrap -->
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
   <!-- Fonts -->
-
+  <!-- CSS -->
+  <link href="style.css" rel="stylesheet">
 </head>
 
-<style media="screen">
-  body {
-    margin: 2em 0 0;
-  }
-
-  .current-player {
-    border: 1px solid orange;
-  }
-
-  .box {
-    border: 1px solid black;
-    height: 200px;
-    margin: 0.5em;
-    padding: 1em;
-  }
-
-  .chat-display {
-    border: 1px solid black;
-    height: 200px;
-  }
-
-  .col-center {
-    float: none;
-    margin: 0 auto;
-  }
-</style>
-
 <body>
-  <div class="text-center">
-    <h1>Rock Paper Scissors</h1>
+  <div class=" container text-center">
+    <h1>Rock ¯\_ Paper _/¯ Sxrs</h1>
 
-    <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6 col-center">
+    <div class="col-6 col-center">
       <form class="player-entry-form">
         <div class="form-group">
           <label>Enter Player Name:</label>
           <input type="text" class="form-control" id="player-input">
-          <input id="player-input-button" type="submit">
+          <input type="submit" class="rps-input-button">
         </div>
       </form>
     </div>
-  </div>
 
-  <div class="container-fluid">
-    <div class="row">
+    <!-- <div class="row">
       <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
 
       </div>
-    </div>
+    </div> -->
 
     <div class="row">
-      <div id="player-1-div" class="mx-auto col-xs-4 col-sm-4 col-md-4 col-lg-4 box">
+
+      <div id="player-1-div" class="mx-auto col-4 box">
         <h4 id="player-1-name"></h4>
         <div id="player-1-box"></div>
         <div id="player-1-stats"></div>
       </div>
 
-      <div id="player-results-box" class="mx-auto col-xs-4 col-sm-4 col-md-4 col-lg-4 box">
-      </div>
+      <div id="player-results-box" class="mx-auto col-4 box"></div>
 
-      <div id="player-2-div" class="mx-auto col-xs-4 col-sm-4 col-md-4 col-lg-4 box">
+      <div id="player-2-div" class="mx-auto col-4 box">
         <h4 id="player-2-name"></h4>
         <div id="player-2-box"></div>
         <div id="player-2-stats"></div>
@@ -79,12 +51,12 @@
     </div>
 
     <div class="row">
-      <div class="col-xs-6 col-sm-6 col-md-6 col-lg-6">
-        <form class="" action="index.html" method="post">
+      <div class="mx-auto col-6">
+        <form class="player-message-form">
           <div class="form-group">
             <div class="chat-display"></div>
-            <input type="text" class="form-control" placeholder="Enter a message...">
-            <input type="submit" name="submit">
+            <input type="text" id="message-input" class="form-control" placeholder="Enter a message...">
+            <input type="submit" class="rps-input-button" name="submit">
           </div>
         </form>
       </div>

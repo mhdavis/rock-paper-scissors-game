@@ -1,0 +1,58 @@
+body {
+  color: white;
+  background-color: #212121;
+  margin: 2em 0 0;
+}
+
+.box {
+  border: 1px solid white;
+  height: 200px;
+}
+
+.col-center {
+  float: none;
+  margin: 0 auto;
+}
+
+#player-input {
+  border: solid 1px white;
+  border-radius: 0px;
+  background-color: #212121;
+  color: white;
+}
+
+.chat-display {
+  border: 1px solid white;
+  height: 200px;
+  background-color: white;
+}
+
+#message-input {
+  border: solid 1px white;
+  border-top: solid 2px #212121;
+  border-radius: 0px;
+  background-color: white;
+  color: #212121;
+}
+
+.rps-input-button {
+  background-color: #212121;
+  color: white;
+  transition: background-color 1s;
+}
+.rps-input-button:hover {
+  background-color: white;
+  color: #212121;
+}
+
+#player-1-stats, #player-2-stats {
+
+}
+
+#player-results-box {
+  border-color: 1px solid white;
+}
+
+.player-message-form {
+  margin-top: 2rem;
+}
