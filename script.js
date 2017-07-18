@@ -1,6 +1,3 @@
-// Score not updating
-// Displaying proper stuff for each player on the DOM
-
 var config = {
   apiKey: "AIzaSyCHJWoeCMbyK6mmhQlxCPIQwPzCZXSa_bU",
   authDomain: "rock-paper-scissors-game-b4885.firebaseapp.com",
@@ -21,21 +18,21 @@ let playerOneCreated = false;
 let playerTwoCreated = false;
 
 let isPlayerOne;
-
 /*--------------------------DOCUMENT READY------------------------------------*/
 
 $(document).ready(function() {
 
+  $("#player-1-box").html("<p>Waiting for Player 1</p>");
+  $("#player-2-box").html("<p>Waiting for Player 2</p>");
+
   $(document).on('submit', '.player-entry-form', function(e) {
     e.preventDefault();
     if (!playerOneCreated) {
-      playerOne = createPlayer(1);
-      setPlayer(playerOne);
+      createAndStorePlayer(1);
       isPlayerOne = true;
 
     } else if (!playerTwoCreated) {
-      playerTwo = createPlayer(2);
-      setPlayer(playerTwo);
+      createAndStorePlayer(2);
       isPlayerOne = false;
 
     } else {
@@ -43,6 +40,23 @@ $(document).ready(function() {
     }
     $('#player-input').val('');
 
+  });
+
+  // FB handler initiates game when two players have joined
+  database.ref('/players').on('child_added', function (playersSnap) {
+    playersSnap.val().player === 1 ? playerOneCreated = true : playerTwoCreated = true;
+
+    if (playersSnap.val().player === 1) {
+      playerOne = pullPlayer(playersSnap.val());
+      displayPlayerInfo(playersSnap.val());
+    } else {
+      playerTwo = pullPlayer(playersSnap.val());
+      displayPlayerInfo(playersSnap.val());
+    }
+
+    if (playerOneCreated && playerTwoCreated) {
+      database.ref('/turn').set(1);
+    }
   });
 
   window.onunload =  function () {
@@ -57,20 +71,17 @@ $(document).ready(function() {
     }
   }
 
-// FB handler initiates game when two players have joined
-  database.ref('/players').on('child_added', function (playersSnap) {
-    playersSnap.val().player === 1 ? playerOneCreated = true : playerTwoCreated = true;
-
-    displayPlayerInfo(playersSnap.val());
-
-    if (playerOneCreated && playerTwoCreated) {
-      database.ref('/turn').set(1);
-    }
-  });
 
   database.ref('/players').on('child_removed', function (playersSnap) {
     playersSnap.val().player === 1 ? playerOneCreated = false : playerTwoCreated = false;
-    if (playerOneCreated || playerTwoCreated) {
+
+    removePlayerInfo(playersSnap.val());
+
+    if (playerOneCreated === false || playerTwoCreated === false) {
+      $("#player-1-box").html("");
+      $("#player-2-box").html("");
+      $("#player-1-div").css("border-color", "black");
+      $("#player-2-div").css("border-color", "black");
       database.ref('/turn').remove();
     }
   });
@@ -79,26 +90,27 @@ $(document).ready(function() {
   database.ref("/turn").on('value', function (turnSnap) {
     if (turnSnap.val() === 1) {
 
-      if (!isPlayerOne) {
-        //player one is picker
-      }
+      $("#player-1-div").css("border-color", "orangered");
 
-      promptPlayerInput(1);
-      rpsButtonEventHandler(playerOne);
+      if (isPlayerOne) {
+        promptPlayerInput(playerOne);
+        rpsButtonEventHandler(playerOne);
+      }
 
     } else if (turnSnap.val() === 2) {
 
-      if (isPlayerOne) {
-
-      }
-
+      $("#player-1-div").css("border-color", "black");
       $("#player-1-box").remove(".current-player-options");
 
-      promptPlayerInput(2);
-      rpsButtonEventHandler(playerTwo);
+      $("#player-2-div").css("border-color", "orangered");
+      if (!isPlayerOne) {
+        promptPlayerInput(playerTwo);
+        rpsButtonEventHandler(playerTwo);
+      }
 
     } else if (turnSnap.val() === 3) {
 
+      $("#player-2-div").css("border-color", "black");
       $("#player-2-box").remove(".current-player-options");
 
       let p1choice;
@@ -112,12 +124,11 @@ $(document).ready(function() {
         p2choice = choiceSnap.val();
       });;
 
-
       let gameResult = comparePlayerInputs(p1choice, p2choice);
 
-      if (!(gameResult === "tie")) {
-        winningCondition(gameResult, playerOne, playerTwo);
-      }
+      winningCondition(gameResult, playerOne, playerTwo);
+      displayPlayerInfo(playerOne);
+      displayPlayerInfo(playerTwo);
 
       $(".rps-button").off();
       database.ref("/players/1/choice").remove();
@@ -131,7 +142,7 @@ $(document).ready(function() {
 
 /*-----------------------------FUNCTIONS-------------------------------------*/
 // returns playerObj
-function createPlayer(num) {
+function createAndStorePlayer(num) {
   let nameInput = $("#player-input").val().trim();
   let playerObj = {
     name: nameInput,
@@ -139,23 +150,38 @@ function createPlayer(num) {
     wins: 0,
     losses: 0
   };
-  $("#player-" + num + "-name").text(playerObj.name);
-  $("#player-" + num + "-wins").text(playerObj.wins);
-  $("#player-" + num + "-losses").text(playerObj.losses);
-
-  return playerObj;
-}
-
-// appends playerObj to FB
-function setPlayer(playerObj) {
   database.ref("/players/" + playerObj.player).set(playerObj);
   return;
 }
 
+function pullPlayer(playerObj) {
+  let player = {
+    name: playerObj.name,
+    player: playerObj.player,
+    wins: playerObj.wins,
+    losses: playerObj.losses
+  };
+  return player;
+}
+
 function displayPlayerInfo(playerObj) {
+  let playerStats =
+  `
+  <p>Wins: <span id="player-${playerObj.player}-wins">${playerObj.wins}</span>
+  Losses: <span id="player-${playerObj.player}-losses">${playerObj.losses}</span></p>
+  `;
+
+  $("#player-" + playerObj.player + "-box").text("");
   $("#player-" + playerObj.player + "-name").text(playerObj.name);
-  $("#player-" + playerObj.player + "-wins").text(playerObj.wins);
-  $("#player-" + playerObj.player + "-losses").text(playerObj.losses);
+  $("#player-" + playerObj.player + "-stats").html(playerStats);
+  return;
+}
+
+function removePlayerInfo(playerObj) {
+  $("#player-" + playerObj.player + "-box").html(`<p>${playerObj.name} left. Waiting for new player</p>`);
+  $("#player-" + playerObj.player + "-name").text("");
+  $("#player-" + playerObj.player + "-stats").html("");
+  return;
 }
 
 function removePlayer(playerObj) {
@@ -173,9 +199,8 @@ function rpsButtonEventHandler(playerObj) {
   $(".rps-button").on("click", function (event) {
     playerChoice = $(event.target).text();
     database.ref("/players/" + playerObj.player + "/choice").set(playerChoice);
-    $("#player-" + playerObj.player + "-box")
-    .removeClass("current-player")
-    .html(`<h3>${playerChoice}</h3>`);
+
+    $("#player-" + playerObj.player + "-box").html(`<h3>${playerChoice}</h3>`);
 
     if (playerObj.player === 1) {
       database.ref("/turn").set(2);
@@ -187,10 +212,11 @@ function rpsButtonEventHandler(playerObj) {
 
 function winningCondition(winner, p1Obj, p2Obj) {
 
-  let $winnerTag;
+  let $displayTag;
 
   if (winner === p1Obj.player) {
-    $winnerTag = `<h3 id="winner-tag">${p1Obj.name} Wins!</h3>`;
+
+    $displayTag = `<h3 id="display-tag">${p1Obj.name} Wins!</h3>`;
 
     p1Obj.wins++;
     p2Obj.losses++;
@@ -199,69 +225,103 @@ function winningCondition(winner, p1Obj, p2Obj) {
     database.ref("/players/2/losses").set(p2Obj.losses);
 
   } else if (winner === p2Obj.player) {
-    $winnerTag = `<h3 id="winner-tag">${p2Obj.name} Wins!</h3>`;
+
+    $displayTag = `<h3 id="display-tag">${p2Obj.name} Wins!</h3>`;
 
     p1Obj.losses++;
     p2Obj.wins++;
 
     database.ref("/players/1/losses").set(p1Obj.losses);
     database.ref("/players/2/wins").set(p2Obj.wins);
+
+  } else {
+
+    $displayTag = `<h3 id='display-tag'>Tie!</h3>`;
+
   }
 
-  $("#player-1-wins").text(p1Obj.wins);
-  $("#player-1-losses").text(p1Obj.losses);
-  $("#player-2-wins").text(p2Obj.wins);
-  $("#player-2-losses").text(p2Obj.losses);
-
-  $("#player-results-box").html($winnerTag);
+  $("#player-results-box").html($displayTag);
   setTimeout(function () {
-    $("#winner-tag").remove();
-  }, 2000);
+    $("#display-tag").remove();
+  }, 3000);
+
+
 }
 
 
-function comparePlayerInputs(a, b) {
+function comparePlayerInputs(p1, p2) {
 
-  switch (a === "Rock") {
-    case (b === "Rock"):
+  if (p1 === "Rock") {
+
+    if (p2 === "Rock") {
       return 'tie';
-      break;
-    case (b === "Scissors"):
-      return 1;
-      break;
-    case (b === "Paper"):
+    } else if (p2 === "Paper") {
       return 2;
-      break;
+    } else if (p2 === "Scissors") {
+      return 1;
+    }
+
+  } else if (p1 === "Paper") {
+
+    if (p2 === "Rock") {
+      return 1;
+    } else if (p2 === "Paper") {
+      return 'tie';
+    } else if (p2 === "Scissors") {
+      return 2;
+    }
+
+  } else if (p1 === "Scissors") {
+
+    if (p2 === "Rock") {
+      return 2;
+    } else if (p2 === "Paper") {
+      return 1;
+    } else if (p2 === "Scissors") {
+      return 'tie';
+    }
+
   }
 
-  switch (a === "Paper") {
-    case (b === "Rock"):
-      return 1;
-      break;
-    case (b === "Scissors"):
-      return 2;
-      break;
-    case (b === "Paper"):
-      return 'tie';
-      break;
-  }
+  // switch (p1 === "Rock") {
+  //   case (p2 === "Rock"):
+  //     return 'tie';
+  //     break;
+  //   case (p2 === "Scissors"):
+  //     return 1;
+  //     break;
+  //   case (p2 === "Paper"):
+  //     return 2;
+  //     break;
+  // }
+  //
+  // switch (p1 === "Paper") {
+  //   case (p2 === "Rock"):
+  //     return 1;
+  //     break;
+  //   case (p2 === "Scissors"):
+  //     return 2;
+  //     break;
+  //   case (b === "Paper"):
+  //     return 'tie';
+  //     break;
+  // }
+  //
+  // switch (p1 === "Scissors") {
+  //   case (p2 === "Rock"):
+  //     return 2;
+  //     break;
+  //   case (p2 === "Scissors"):
+  //     return 'tie';
+  //     break;
+  //   case (p2 === "Paper"):
+  //     return 1;
+  //     break;
+  // }
+}
 
-  switch (a === "Scissors") {
-    case (b === "Rock"):
-      return 2;
-      break;
-    case (b === "Scissors"):
-      return 'tie';
-      break;
-    case (b === "Paper"):
-      return 1;
-      break;
-  }
-
-};
-
-function promptPlayerInput(num) {
-  var buttonGroup =
+function promptPlayerInput(playerObj) {
+  let buttonGroup =
   `
   <div class="current-player-options">
     <div class="button-group">
@@ -271,6 +331,9 @@ function promptPlayerInput(num) {
     </div>
   </div>
   `;
-  $("player-" + num + "-box").html(buttonGroup);
+
+  if (playerObj !== undefined) {
+    $("#player-" + playerObj.player + "-box").html(buttonGroup);
+  }
   return;
 }
