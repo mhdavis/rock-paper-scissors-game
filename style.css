@@ -1,3 +1,7 @@
+/*
+Message line width
+*/
+
 body {
   color: white;
   background-color: #212121;
@@ -7,6 +11,7 @@ body {
 .box {
   border: 1px solid white;
   height: 200px;
+  position: relative;
 }
 
 .col-center {
@@ -19,12 +24,62 @@ body {
   border-radius: 0px;
   background-color: #212121;
   color: white;
+  display: inline-block;
+  width: 87%;
+}
+
+.rps-input-button {
+  background-color: #212121;
+  color: white;
+  border: solid 1px white;
+
+  transition: background-color 0.5s;
+}
+.rps-input-button:hover {
+  background-color: white;
+  color: #212121;
+}
+
+.rps-button {
+  background-color: #212121;
+  color: white;
+  border: solid 2px white;
+  border-radius: 0px;
+  transition: color 0.5s, border-color 0.5s;
+}
+
+.rock-button:hover {
+  color: #cf4a00;
+  border-color: #cf4a00;
+}
+
+.paper-button:hover {
+  color: #02b5dd;
+  border-color: #02b5dd;
+}
+
+.scissors-button:hover {
+  color: #1ca600;
+  border-color: #1ca600;
+}
+
+#player-1-stats, #player-2-stats {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+#player-results-box {
+  border-color: 1px solid white;
 }
 
 .chat-display {
   border: 1px solid white;
   height: 200px;
   background-color: white;
+  overflow-y: scroll;
+  position: relative;
 }
 
 #message-input {
@@ -33,26 +88,36 @@ body {
   border-radius: 0px;
   background-color: white;
   color: #212121;
-}
-
-.rps-input-button {
-  background-color: #212121;
-  color: white;
-  transition: background-color 1s;
-}
-.rps-input-button:hover {
-  background-color: white;
-  color: #212121;
-}
-
-#player-1-stats, #player-2-stats {
-
-}
-
-#player-results-box {
-  border-color: 1px solid white;
+  display: inline-block;
+  width: 87%;
 }
 
 .player-message-form {
   margin-top: 2rem;
+}
+
+#message-input-button {
+  display: inline-block;
+}
+
+.player-1-message {
+  color: #3757ff;
+  left: 0;
+  top: 0;
+  margin-bottom: 0rem;
+}
+
+.player-2-message {
+  color: #bd6600;
+  left: 0;
+  top: 0;
+  margin-bottom: 0rem;
+
+}
+
+.disconnect-message {
+  background-color: #ff8080;
+  left: 0;
+  top: 0;
+  margin-bottom: 0rem;
 }

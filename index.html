@@ -13,36 +13,30 @@
 </head>
 
 <body>
-  <div class=" container text-center">
-    <h1>Rock ¯\_ Paper _/¯ Sxrs</h1>
+  <div class=" container">
+    <h1 class="text-center">Rock ¯\_ Paper _/¯ Sxrs</h1>
 
-    <div class="col-6 col-center">
+    <div class="col-6 col-center text-center">
       <form class="player-entry-form">
         <div class="form-group">
           <label>Enter Player Name:</label>
           <input type="text" class="form-control" id="player-input">
-          <input type="submit" class="rps-input-button">
+          <input id="player-input-button" class="rps-input-button" type="submit">
         </div>
       </form>
     </div>
 
-    <!-- <div class="row">
-      <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
-
-      </div>
-    </div> -->
-
     <div class="row">
 
-      <div id="player-1-div" class="mx-auto col-4 box">
+      <div id="player-1-div" class="mx-auto col-4 text-center box">
         <h4 id="player-1-name"></h4>
         <div id="player-1-box"></div>
         <div id="player-1-stats"></div>
       </div>
 
-      <div id="player-results-box" class="mx-auto col-4 box"></div>
+      <div id="player-results-box" class="mx-auto col-4 text-center box"></div>
 
-      <div id="player-2-div" class="mx-auto col-4 box">
+      <div id="player-2-div" class="mx-auto col-4 text-center box">
         <h4 id="player-2-name"></h4>
         <div id="player-2-box"></div>
         <div id="player-2-stats"></div>
@@ -55,8 +49,10 @@
         <form class="player-message-form">
           <div class="form-group">
             <div class="chat-display"></div>
-            <input type="text" id="message-input" class="form-control" placeholder="Enter a message...">
-            <input type="submit" class="rps-input-button" name="submit">
+            <div class="chat-interaction">
+              <input type="text" id="message-input" class="form-control" placeholder="Enter a message...">
+              <input id="message-input-button" type="submit" class="rps-input-button" name="Send">
+            </div>
           </div>
         </form>
       </div>

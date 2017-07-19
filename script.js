@@ -1,3 +1,7 @@
+/*
+- Add "player has disconnected" when player refreshs / leaves
+*/
+
 var config = {
   apiKey: "AIzaSyCHJWoeCMbyK6mmhQlxCPIQwPzCZXSa_bU",
   authDomain: "rock-paper-scissors-game-b4885.firebaseapp.com",
@@ -28,12 +32,12 @@ $(document).ready(function() {
   $(document).on('submit', '.player-entry-form', function(e) {
     e.preventDefault();
     if (!playerOneCreated) {
-      createAndStorePlayer(1);
       isPlayerOne = true;
+      createAndStorePlayer(1);
 
     } else if (!playerTwoCreated) {
-      createAndStorePlayer(2);
       isPlayerOne = false;
+      createAndStorePlayer(2);
 
     } else {
       alert("already two players");
@@ -59,6 +63,17 @@ $(document).ready(function() {
     }
   });
 
+  $(document).on('submit', '.player-message-form', function(e) {
+    e.preventDefault();
+    if (isPlayerOne) {
+      // player one
+      database.ref('/chat').push(createMessage(playerOne));
+    } else {
+      // player two
+      database.ref('/chat').push(createMessage(playerTwo));
+    }
+  });
+
   window.onunload =  function () {
     if (isPlayerOne === false) {
       playerOneCreated = removePlayer(playerTwo);
@@ -67,21 +82,31 @@ $(document).ready(function() {
       playerTwoCreated = removePlayer(playerOne);
       playerTwo = {};
     } else {
-      console.log("No Players in Game");
+      database.ref('/chat').remove();
     }
   }
 
+  database.ref('/chat').on('child_added', function (messageSnap) {
+    if (isPlayerOne) {
+      $('.chat-display').append(messageSnap.val());
+    } else {
+      $('.chat-display').append(messageSnap.val());
+    }
+    $("#message-input").val("");
+  });
 
   database.ref('/players').on('child_removed', function (playersSnap) {
     playersSnap.val().player === 1 ? playerOneCreated = false : playerTwoCreated = false;
 
+    let disconnectMessage = `<p class="disconnect-message">~~~ ${playersSnap.val().name} has disconnected ~~~</p>`;
+    $(".chat-display").append(disconnectMessage);
     removePlayerInfo(playersSnap.val());
 
     if (playerOneCreated === false || playerTwoCreated === false) {
       $("#player-1-box").html("");
       $("#player-2-box").html("");
-      $("#player-1-div").css("border-color", "black");
-      $("#player-2-div").css("border-color", "black");
+      $("#player-1-div").css("border-color", "white");
+      $("#player-2-div").css("border-color", "white");
       database.ref('/turn').remove();
     }
   });
@@ -89,8 +114,7 @@ $(document).ready(function() {
 // FB handler that determines which turn it is in the game
   database.ref("/turn").on('value', function (turnSnap) {
     if (turnSnap.val() === 1) {
-
-      $("#player-1-div").css("border-color", "orangered");
+      $("#player-1-div").css("border-color", "yellow");
 
       if (isPlayerOne) {
         promptPlayerInput(playerOne);
@@ -99,10 +123,10 @@ $(document).ready(function() {
 
     } else if (turnSnap.val() === 2) {
 
-      $("#player-1-div").css("border-color", "black");
+      $("#player-1-div").css("border-color", "white");
       $("#player-1-box").remove(".current-player-options");
 
-      $("#player-2-div").css("border-color", "orangered");
+      $("#player-2-div").css("border-color", "yellow");
       if (!isPlayerOne) {
         promptPlayerInput(playerTwo);
         rpsButtonEventHandler(playerTwo);
@@ -110,7 +134,7 @@ $(document).ready(function() {
 
     } else if (turnSnap.val() === 3) {
 
-      $("#player-2-div").css("border-color", "black");
+      $("#player-2-div").css("border-color", "white");
       $("#player-2-box").remove(".current-player-options");
 
       let p1choice;
@@ -210,6 +234,14 @@ function rpsButtonEventHandler(playerObj) {
   });
 }
 
+function createMessage(playerObj) {
+
+    let messageValue = $("#message-input").val();
+    let message = `<p class="player-${playerObj.player}-message">${playerObj.name}: ${messageValue}</p>`;
+    return message;
+
+}
+
 function winningCondition(winner, p1Obj, p2Obj) {
 
   let $displayTag;
@@ -282,42 +314,6 @@ function comparePlayerInputs(p1, p2) {
     }
 
   }
-
-  // switch (p1 === "Rock") {
-  //   case (p2 === "Rock"):
-  //     return 'tie';
-  //     break;
-  //   case (p2 === "Scissors"):
-  //     return 1;
-  //     break;
-  //   case (p2 === "Paper"):
-  //     return 2;
-  //     break;
-  // }
-  //
-  // switch (p1 === "Paper") {
-  //   case (p2 === "Rock"):
-  //     return 1;
-  //     break;
-  //   case (p2 === "Scissors"):
-  //     return 2;
-  //     break;
-  //   case (b === "Paper"):
-  //     return 'tie';
-  //     break;
-  // }
-  //
-  // switch (p1 === "Scissors") {
-  //   case (p2 === "Rock"):
-  //     return 2;
-  //     break;
-  //   case (p2 === "Scissors"):
-  //     return 'tie';
-  //     break;
-  //   case (p2 === "Paper"):
-  //     return 1;
-  //     break;
-  // }
 }
 
 function promptPlayerInput(playerObj) {
@@ -325,9 +321,9 @@ function promptPlayerInput(playerObj) {
   `
   <div class="current-player-options">
     <div class="button-group">
-      <button class="rps-button btn btn-md btn-default">Rock</button>
-      <button class="rps-button btn btn-md btn-default">Paper</button>
-      <button class="rps-button btn btn-md btn-default">Scissors</button>
+      <button class="rock-button rps-button btn btn-md btn-default">Rock</button>
+      <button class="paper-button rps-button btn btn-md btn-default">Paper</button>
+      <button class="scissors-button rps-button btn btn-md btn-default">Scissors</button>
     </div>
   </div>
   `;
