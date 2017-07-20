@@ -1,8 +1,4 @@
-/*
-- Add "player has disconnected" when player refreshs / leaves
-*/
-
-var config = {
+const config = {
   apiKey: "AIzaSyCHJWoeCMbyK6mmhQlxCPIQwPzCZXSa_bU",
   authDomain: "rock-paper-scissors-game-b4885.firebaseapp.com",
   databaseURL: "https://rock-paper-scissors-game-b4885.firebaseio.com",
@@ -10,6 +6,7 @@ var config = {
   storageBucket: "",
   messagingSenderId: "977002967515"
 };
+
 firebase.initializeApp(config);
 
 let database = firebase.database();

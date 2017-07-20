@@ -1,11 +1,8 @@
-/*
-Message line width
-*/
-
 body {
   color: white;
   background-color: #212121;
   margin: 2em 0 0;
+  font-family: 'Raleway', sans-serif;
 }
 
 .box {
@@ -14,9 +11,8 @@ body {
   position: relative;
 }
 
-.col-center {
-  float: none;
-  margin: 0 auto;
+#rps-title {
+  border: 2px solid white;
 }
 
 #player-input {
@@ -61,6 +57,14 @@ body {
 .scissors-button:hover {
   color: #1ca600;
   border-color: #1ca600;
+}
+
+#player-1-name, #player-2-name {
+  margin: 0.5em 0;
+}
+
+#player-1-box, #player-2-box {
+  margin: 0.5em 0;
 }
 
 #player-1-stats, #player-2-stats {
