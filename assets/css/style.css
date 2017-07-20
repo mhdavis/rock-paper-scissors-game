@@ -78,6 +78,10 @@ body {
   border-color: 1px solid white;
 }
 
+.rps-stats-para {
+  margin: 0px;
+}
+
 .chat-display {
   border: 1px solid white;
   height: 200px;
